@@ -11,116 +11,58 @@ Alarm Clock, accessed through a PyQt5 Gui, that displays a random Youtube video
 
 """
 
-import sys, random
+import sys, random, ytAlarmClockGUI
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QApplication, QPushButton,
     QFrame, QHBoxLayout, QVBoxLayout, QSplitter, QStyleFactory, QTableWidget,
-    QHeaderView, QGridLayout)
+    QTableWidgetItem, QHeaderView, QGridLayout, QFileDialog, QAction)
 from PyQt5.QtCore import Qt
 
 
-class LinkPopup(QWidget):
-    def __init__(self):
-        super().__init__()
 
-        self.initPopup()
-
-    def initPopup(self):
-
-        browseBtn = QPushButton(self)
-        #table or list with links
-        #need a label to show 'links list' location
-
-        self.setGeometry(400,400,400,300)
-        self.setWindowTitle('Link List')
-        self.show()
-
-
-class NewAlarmPopup(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.initPopup()
-
-    def initPopup(self):
-        self.setGeometry(300,300,400,300)
-        self.setWindowTitle('Add new alarm')
-        self.show()
-
-class AlarmClock(QMainWindow):
+class AlarmClock():
 
     def __init__(self):
         super().__init__()
+        self.ui = ytAlarmClockGUI.MainUI()
 
-        self.initUI()
-
-
-    #TODO put all the GUI stuff in another file and import it?
-    #set up GUI
-    def initUI(self):
-
-        mainWidget = QWidget()
-        self.setCentralWidget(mainWidget)
-
-        button1 = QPushButton('Add New Alarm')
-        button1.clicked.connect(self.openNewAlarmWindow)
-        button2 = QPushButton('Update Links File')
-        button2.clicked.connect(self.openLinkUpdatePopup)
-
-        table1 = QTableWidget(mainWidget)
-        #setRowCount number of columns for number of entries for that day
-        table1.setRowCount(8)
-        table1.setColumnCount(1)
-        vLabels = ['Monday','', 'Tuesday', 'Wednesday','Thursday','Friday','Saturday',
-                  'Sunday']
-        hLabels = ['Alarms']
-        table1.setVerticalHeaderLabels(vLabels)
-        table1.setHorizontalHeaderLabels(hLabels)
-
-        #make horizontal label fill panel
-        headerH = table1.horizontalHeader()
-        headerH.setSectionResizeMode(QHeaderView.Stretch)
-
-        headerV = table1.verticalHeader()
-        headerV.setSectionResizeMode(QHeaderView.Stretch)
-
-        table2 = QTableWidget(mainWidget)
-        #setRowCount number of columns for number of entries for that day
-        table2.setRowCount(8)
-        table2.setColumnCount(1)
-        hLabels2 = ['Video Link File: ']
-        table2.setHorizontalHeaderLabels(hLabels2)
-
-        headerH2 = table2.horizontalHeader()
-        headerH2.setSectionResizeMode(QHeaderView.Stretch)
-
-        headerV2 = table2.verticalHeader()
-        headerV2.setSectionResizeMode(QHeaderView.Stretch)
-
-        widge1 =  QWidget()
-        vbox = QVBoxLayout(mainWidget)
-        vbox.addWidget(button1)
-        vbox.addWidget(button2)
-        widge1.setLayout(vbox)
-
-        hbox = QHBoxLayout(mainWidget)
-        hbox.addWidget(table1)
-        hbox.addWidget(widge1)
-        hbox.addWidget(table2)
+        self.linksList = []
+        self.linkFile = ''
+        self.ui.button2.clicked.connect(self.getLinksFile)
 
 
-        self.setGeometry(300,300,800,600)
-        self.setFixedSize(800,600)
-        self.setWindowTitle('Youtube Alarm Clock')
-        self.show()
+    def getLinksFile(self):
+
+        filename = QFileDialog.getOpenFileName()
+
+        if filename[0]:
+            self.linkFile += filename[0]
+            print (self.linkFile)
+
+        self.parseLinks()
 
 
-    def openNewAlarmWindow(self):
-        self.popup = NewAlarmPopup()
-        self.show()
+    def parseLinks(self):
 
-    def openLinkUpdatePopup(self):
-        self.linkPopup = LinkPopup()
-        self.show()
+        #case 1: links seperated by newline '\n'
+        with open(self.linkFile, 'r') as f:
+            for row in f:
+                self.linksList.append(row.split())
+
+        for item in self.linksList:
+            print (item)
+
+        self.popLinkTable()
+
+    def popLinkTable(self):
+        self.ui.hLabels2[0] += self.linkFile
+        self.ui.table2.setHorizontalHeaderLabels(self.ui.hLabels2)
+        for i in range(len(self.linksList)):
+            for j in range(0,8):
+                item = QTableWidgetItem(self.linksList[i][0])
+                self.ui.table2.setItem(0,j,item)
+
+
+
 
 """
     def addAlarm(self):
@@ -146,11 +88,6 @@ class AlarmClock(QMainWindow):
 
         #iterate through dictionary of alarms and sort the list entries
         #chronologically for each key
-
-
-    def updateLinksList(self, link):
-
-        #add parsed links to list
 
 
     def parseVideoLinks(self):
